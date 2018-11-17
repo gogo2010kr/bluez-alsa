@@ -159,15 +159,6 @@ static struct ba_pcm *_transport_get_pcm(struct ba_transport *t, enum ba_pcm_str
 /**
  * Release transport resources acquired by the controller module. */
 static void _transport_release(struct ba_transport *t, int client) {
-
-	/* For a source profile (where the stream is read from the PCM) an IO thread
-	 * terminates when the PCM is closed. However, it is asynchronous, so if the
-	 * client closes the connection, and then quickly tries to open it again, we
-	 * might try to acquire not yet released transport. To prevent this, we have
-	 * to make sure, that the transport is released (thread is terminated). */
-	if (t->profile == BLUETOOTH_PROFILE_A2DP_SOURCE)
-		transport_pthread_cancel(t->thread);
-
 	switch (t->type) {
 	case TRANSPORT_TYPE_A2DP:
 		transport_release_pcm(&t->a2dp.pcm);
@@ -185,7 +176,6 @@ static void _transport_release(struct ba_transport *t, int client) {
 			t->sco.mic_pcm.client = -1;
 		}
 	}
-
 }
 
 static void _ctl_transport(const struct ba_transport *t, struct ba_msg_transport *transport) {
@@ -413,10 +403,8 @@ static void ctl_thread_cmd_pcm_open(const struct ba_request *req, int fd) {
 		goto fail;
 	}
 
-	/* XXX: This change will notify our sink (and SCO) IO thread, that the FIFO
-	 *      has just been created. Source IO thread should not be started before
-	 *      the PCM open request has been made, so this "notification" mechanism
-	 *      does not apply. */
+	/* Notify our IO thread, that the FIFO has just been created - it may be
+	 * used for poll() right away. */
 	transport_send_signal(t, TRANSPORT_PCM_OPEN);
 
 	/* A2DP source profile should be initialized (acquired) only if the audio

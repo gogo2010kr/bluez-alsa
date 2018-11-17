@@ -409,6 +409,8 @@ void *io_thread_a2dp_source_sbc(void *arg) {
 		switch (poll(pfds, ARRAYSIZE(pfds), poll_timeout)) {
 		case 0:
 			pthread_cond_signal(&t->a2dp.pcm.drained);
+			if (t->a2dp.pcm.fd == -1)
+				break;
 			poll_timeout = -1;
 			continue;
 		case -1:
@@ -424,8 +426,13 @@ void *io_thread_a2dp_source_sbc(void *arg) {
 			if (read(pfds[0].fd, &sig, sizeof(sig)) != sizeof(sig))
 				warn("Couldn't read signal: %s", strerror(errno));
 			switch (sig) {
+			case TRANSPORT_PCM_OPEN:
 			case TRANSPORT_PCM_RESUME:
+				poll_timeout = -1;
 				asrs.frames = 0;
+				break;
+			case TRANSPORT_PCM_CLOSE:
+				poll_timeout = config.a2dp.keep_alive * 1000;
 				break;
 			case TRANSPORT_PCM_SYNC:
 				poll_timeout = 100;
@@ -882,6 +889,8 @@ void *io_thread_a2dp_source_aac(void *arg) {
 		switch (poll(pfds, ARRAYSIZE(pfds), poll_timeout)) {
 		case 0:
 			pthread_cond_signal(&t->a2dp.pcm.drained);
+			if (t->a2dp.pcm.fd == -1)
+				break;
 			poll_timeout = -1;
 			continue;
 		case -1:
@@ -897,8 +906,13 @@ void *io_thread_a2dp_source_aac(void *arg) {
 			if (read(pfds[0].fd, &sig, sizeof(sig)) != sizeof(sig))
 				warn("Couldn't read signal: %s", strerror(errno));
 			switch (sig) {
+			case TRANSPORT_PCM_OPEN:
 			case TRANSPORT_PCM_RESUME:
+				poll_timeout = -1;
 				asrs.frames = 0;
+				break;
+			case TRANSPORT_PCM_CLOSE:
+				poll_timeout = config.a2dp.keep_alive * 1000;
 				break;
 			case TRANSPORT_PCM_SYNC:
 				poll_timeout = 100;
@@ -1068,6 +1082,8 @@ void *io_thread_a2dp_source_aptx(void *arg) {
 		switch (poll(pfds, ARRAYSIZE(pfds), poll_timeout)) {
 		case 0:
 			pthread_cond_signal(&t->a2dp.pcm.drained);
+			if (t->a2dp.pcm.fd == -1)
+				break;
 			poll_timeout = -1;
 			continue;
 		case -1:
@@ -1083,8 +1099,13 @@ void *io_thread_a2dp_source_aptx(void *arg) {
 			if (read(pfds[0].fd, &sig, sizeof(sig)) != sizeof(sig))
 				warn("Couldn't read signal: %s", strerror(errno));
 			switch (sig) {
+			case TRANSPORT_PCM_OPEN:
 			case TRANSPORT_PCM_RESUME:
+				poll_timeout = -1;
 				asrs.frames = 0;
+				break;
+			case TRANSPORT_PCM_CLOSE:
+				poll_timeout = config.a2dp.keep_alive * 1000;
 				break;
 			case TRANSPORT_PCM_SYNC:
 				poll_timeout = 100;
@@ -1283,6 +1304,8 @@ void *io_thread_a2dp_source_ldac(void *arg) {
 		switch (poll(pfds, ARRAYSIZE(pfds), poll_timeout)) {
 		case 0:
 			pthread_cond_signal(&t->a2dp.pcm.drained);
+			if (t->a2dp.pcm.fd == -1)
+				break;
 			poll_timeout = -1;
 			continue;
 		case -1:
@@ -1298,8 +1321,13 @@ void *io_thread_a2dp_source_ldac(void *arg) {
 			if (read(pfds[0].fd, &sig, sizeof(sig)) != sizeof(sig))
 				warn("Couldn't read signal: %s", strerror(errno));
 			switch (sig) {
+			case TRANSPORT_PCM_OPEN:
 			case TRANSPORT_PCM_RESUME:
+				poll_timeout = -1;
 				asrs.frames = 0;
+				break;
+			case TRANSPORT_PCM_CLOSE:
+				poll_timeout = config.a2dp.keep_alive * 1000;
 				break;
 			case TRANSPORT_PCM_SYNC:
 				poll_timeout = 100;
